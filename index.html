@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ContaWeb — Sistema Contable Interactivo</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue-50: #E6F1FB;
+    --blue-100: #B5D4F4;
+    --blue-600: #185FA5;
+    --blue-800: #0C447C;
+    --blue-900: #042C53;
+    --teal-50: #E1F5EE;
+    --teal-100: #9FE1CB;
+    --teal-600: #0F6E56;
+    --teal-800: #085041;
+    --green-50: #EAF3DE;
+    --green-600: #3B6D11;
+    --green-800: #27500A;
+    --red-50: #FCEBEB;
+    --red-600: #A32D2D;
+    --red-800: #791F1F;
+    --amber-50: #FAEEDA;
+    --amber-600: #854F0B;
+    --gray-50: #F1EFE8;
+    --gray-100: #D3D1C7;
+    --gray-200: #B4B2A9;
+    --gray-600: #5F5E5A;
+    --gray-800: #444441;
+    --gray-900: #2C2C2A;
+    --surface: #ffffff;
+    --page-bg: #F7F6F2;
+    --border: rgba(0,0,0,0.12);
+    --border-md: rgba(0,0,0,0.22);
+    --text-primary: #1a1a18;
+    --text-secondary: #5F5E5A;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--page-bg);
+    color: var(--text-primary);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--blue-900);
+    color: #fff;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+
+  .logo span {
+    color: var(--teal-100);
+  }
+
+  nav {
+    margin-left: auto;
+    display: flex;
+    gap: 4px;
+  }
+
+  nav button {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    font-family: inherit;
+  }
+
+  nav button:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  nav button.active { background: rgba(255,255,255,0.15); color: #fff; font-weight: 500; }
+
+  main { padding: 2rem; max-width: 1100px; margin: 0 auto; }
+
+  .section { display: none; }
+  .section.visible { display: block; }
+
+  .section-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--blue-900);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 1rem;
+  }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 1.5rem;
+  }
+
+  .metric-card {
+    background: var(--page-bg);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+  }
+
+  .metric-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+
+  .metric-value {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+  }
+
+  .metric-value.positive { color: var(--teal-600); }
+  .metric-value.negative { color: var(--red-600); }
+  .metric-value.neutral { color: var(--blue-800); }
+
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    margin-top: 12px;
+  }
+
+  label:first-of-type { margin-top: 0; }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 0.5px solid var(--border-md);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--surface);
+    color: var(--text-primary);
+    transition: border-color 0.15s;
+    outline: none;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--blue-600);
+    box-shadow: 0 0 0 3px rgba(24,95,165,0.12);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .form-row-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+  }
+
+  @media (max-width: 600px) {
+    .form-row, .form-row-3 { grid-template-columns: 1fr; }
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 20px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    border: 0.5px solid var(--border-md);
+    background: var(--surface);
+    color: var(--text-primary);
+    transition: background 0.15s, transform 0.1s;
+    margin-top: 1rem;
+  }
+
+  .btn:hover { background: var(--page-bg); }
+  .btn:active { transform: scale(0.98); }
+
+  .btn-primary {
+    background: var(--blue-800);
+    color: #fff;
+    border-color: var(--blue-800);
+  }
+
+  .btn-primary:hover { background: var(--blue-900); }
+
+  .btn-danger {
+    background: var(--red-50);
+    color: var(--red-800);
+    border-color: rgba(163,45,45,0.3);
+    padding: 5px 10px;
+    font-size: 12px;
+    margin-top: 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  thead th {
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+    background: var(--page-bg);
+  }
+
+  tbody tr { border-bottom: 0.5px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+
+  tbody td {
+    padding: 10px 12px;
+    vertical-align: middle;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .badge-ingreso { background: var(--teal-50); color: var(--teal-600); }
+  .badge-egreso { background: var(--red-50); color: var(--red-600); }
+  .badge-ajuste { background: var(--amber-50); color: var(--amber-600); }
+
+  .amount-positive { color: var(--teal-600); font-weight: 500; }
+  .amount-negative { color: var(--red-600); font-weight: 500; }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  .divider-row td {
+    background: var(--page-bg);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 12px;
+    color: var(--text-primary);
+  }
+
+  .total-row td {
+    font-weight: 600;
+    font-size: 14px;
+    border-top: 2px solid var(--border-md);
+    padding: 12px 12px;
+  }
+
+  .subtotal-row td {
+    font-weight: 500;
+    background: var(--page-bg);
+    padding: 8px 12px;
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+
+  .alert {
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    margin-bottom: 1rem;
+  }
+
+  .alert-success { background: var(--green-50); color: var(--green-800); border: 0.5px solid rgba(59,109,17,0.25); }
+  .alert-danger { background: var(--red-50); color: var(--red-800); border: 0.5px solid rgba(163,45,45,0.25); }
+  .alert-info { background: var(--blue-50); color: var(--blue-800); border: 0.5px solid rgba(24,95,165,0.25); }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+  }
+
+  .tab {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    font-family: inherit;
+    margin-bottom: -1px;
+  }
+
+  .tab:hover { color: var(--text-primary); }
+  .tab.active { color: var(--blue-800); border-bottom-color: var(--blue-800); }
+
+  .cuenta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  @media (max-width: 700px) { .cuenta-grid { grid-template-columns: 1fr; } }
+
+  .cuenta-section {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .cuenta-section-header {
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .cuenta-section-header.activo { background: var(--blue-50); color: var(--blue-800); }
+  .cuenta-section-header.pasivo { background: var(--red-50); color: var(--red-800); }
+  .cuenta-section-header.patrimonio { background: var(--teal-50); color: var(--teal-800); }
+  .cuenta-section-header.ingreso { background: var(--green-50); color: var(--green-800); }
+  .cuenta-section-header.egreso { background: var(--amber-50); color: var(--amber-600); }
+
+  .cuenta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    font-size: 13px;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .cuenta-row:last-child { border-bottom: none; }
+
+  .cuenta-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--page-bg);
+    border-top: 1px solid var(--border-md);
+  }
+
+  .report-total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 16px;
+    font-weight: 600;
+    font-size: 15px;
+    background: var(--blue-50);
+    color: var(--blue-800);
+    border-radius: var(--radius-md);
+    margin-top: 1rem;
+  }
+
+  .print-note {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: right;
+    margin-bottom: 0.5rem;
+  }
+
+  @media print {
+    header, nav, .btn { display: none !important; }
+    body { background: white; }
+    main { padding: 0; max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Conta<span>Web</span></div>
+  <nav>
+    <button class="active" onclick="showSection('diario')">Diario</button>
+    <button onclick="showSection('ajustes')">Ajustes</button>
+    <button onclick="showSection('balance')">Balance</button>
+    <button onclick="showSection('resultados')">Resultados</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ═══ DIARIO ═══ -->
+  <div id="sec-diario" class="section visible">
+    <h2 class="section-title">Registro diario de transacciones</h2>
+
+    <div class="metrics" id="metrics-bar">
+      <div class="metric-card">
+        <div class="metric-label">Total ingresos</div>
+        <div class="metric-value positive" id="m-ingresos">$0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Total egresos</div>
+        <div class="metric-value negative" id="m-egresos">$0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Utilidad neta</div>
+        <div class="metric-value neutral" id="m-utilidad">$0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Transacciones</div>
+        <div class="metric-value neutral" id="m-count">0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Nueva transacción</div>
+      <div class="form-row">
+        <div>
+          <label>Fecha</label>
+          <input type="date" id="tx-fecha">
+        </div>
+        <div>
+          <label>Tipo</label>
+          <select id="tx-tipo">
+            <option value="ingreso">Ingreso</option>
+            <option value="egreso">Egreso</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row-3" style="margin-top:12px">
+        <div>
+          <label>Cuenta</label>
+          <input type="text" id="tx-cuenta" placeholder="Ej: Ventas, Caja, Proveedores">
+        </div>
+        <div>
+          <label>Descripción</label>
+          <input type="text" id="tx-desc" placeholder="Concepto de la transacción">
+        </div>
+        <div>
+          <label>Monto ($)</label>
+          <input type="number" id="tx-monto" placeholder="0.00" min="0" step="0.01">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="addTransaction()">Registrar transacción</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Libro diario</div>
+      <div id="diario-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Tipo</th>
+              <th>Cuenta</th>
+              <th>Descripción</th>
+              <th style="text-align:right">Monto</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="diario-body">
+            <tr><td colspan="6"><div class="empty-state">No hay transacciones registradas.<br>Agrega tu primera entrada arriba.</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ AJUSTES ═══ -->
+  <div id="sec-ajustes" class="section">
+    <h2 class="section-title">Asientos de ajuste</h2>
+
+    <div class="alert alert-info">
+      Los ajustes contables corrigen o actualizan cuentas al final del período: depreciaciones, amortizaciones, provisiones, entre otros.
+    </div>
+
+    <div class="card">
+      <div class="card-title">Nuevo ajuste</div>
+      <div class="form-row">
+        <div>
+          <label>Fecha</label>
+          <input type="date" id="aj-fecha">
+        </div>
+        <div>
+          <label>Concepto del ajuste</label>
+          <select id="aj-concepto">
+            <option value="Depreciación">Depreciación de activos</option>
+            <option value="Amortización">Amortización</option>
+            <option value="Provisión">Provisión de deudas malas</option>
+            <option value="Acumulación">Gasto acumulado</option>
+            <option value="Diferido">Ingreso diferido</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row-3" style="margin-top:12px">
+        <div>
+          <label>Cuenta deudora (Débito)</label>
+          <input type="text" id="aj-debito" placeholder="Ej: Gasto depreciación">
+        </div>
+        <div>
+          <label>Cuenta acreedora (Crédito)</label>
+          <input type="text" id="aj-credito" placeholder="Ej: Depreciación acumulada">
+        </div>
+        <div>
+          <label>Monto ($)</label>
+          <input type="number" id="aj-monto" placeholder="0.00" min="0" step="0.01">
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <label>Notas (opcional)</label>
+        <textarea id="aj-notas" rows="2" placeholder="Descripción adicional del ajuste..."></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="addAjuste()">Registrar ajuste</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Ajustes registrados</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Concepto</th>
+            <th>Débito</th>
+            <th>Crédito</th>
+            <th style="text-align:right">Monto</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="ajustes-body">
+          <tr><td colspan="6"><div class="empty-state">No hay ajustes registrados.</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ BALANCE ═══ -->
+  <div id="sec-balance" class="section">
+    <h2 class="section-title">Balance general</h2>
+    <p class="print-note"><button class="btn" style="margin:0;font-size:12px;padding:5px 12px" onclick="window.print()">Imprimir / Guardar PDF</button></p>
+
+    <div class="alert alert-info" id="balance-alert">
+      El balance muestra la ecuación contable: <strong>Activo = Pasivo + Patrimonio</strong>. Se construye con las cuentas registradas en el diario.
+    </div>
+
+    <div class="cuenta-grid" id="balance-grid">
+      <div>
+        <div class="cuenta-section">
+          <div class="cuenta-section-header activo">Activos</div>
+          <div id="activos-list"><div class="cuenta-row" style="color:var(--text-secondary);font-size:13px">Sin datos — registra transacciones primero.</div></div>
+          <div class="cuenta-total">
+            <span>Total Activos</span>
+            <span id="total-activos">$0</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="cuenta-section" style="margin-bottom:1rem">
+          <div class="cuenta-section-header pasivo">Pasivos</div>
+          <div id="pasivos-list"><div class="cuenta-row" style="color:var(--text-secondary);font-size:13px">Sin datos.</div></div>
+          <div class="cuenta-total">
+            <span>Total Pasivos</span>
+            <span id="total-pasivos">$0</span>
+          </div>
+        </div>
+        <div class="cuenta-section">
+          <div class="cuenta-section-header patrimonio">Patrimonio</div>
+          <div id="patrimonio-list"></div>
+          <div class="cuenta-total">
+            <span>Total Patrimonio</span>
+            <span id="total-patrimonio">$0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="report-total-row" id="balance-check">
+      <span>Verificación de ecuación contable</span>
+      <span id="balance-status">—</span>
+    </div>
+  </div>
+
+  <!-- ═══ RESULTADOS ═══ -->
+  <div id="sec-resultados" class="section">
+    <h2 class="section-title">Estado de resultados</h2>
+    <p class="print-note"><button class="btn" style="margin:0;font-size:12px;padding:5px 12px" onclick="window.print()">Imprimir / Guardar PDF</button></p>
+
+    <div class="card" id="resultados-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Cuenta</th>
+            <th style="text-align:right">Monto</th>
+          </tr>
+        </thead>
+        <tbody id="resultados-body">
+          <tr><td colspan="2"><div class="empty-state">Registra ingresos y egresos en el diario para generar el estado de resultados.</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script>
+let transactions = JSON.parse(localStorage.getItem('cw_tx') || '[]');
+let ajustes = JSON.parse(localStorage.getItem('cw_aj') || '[]');
+
+function fmt(n) {
+  return '$' + Number(n).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function save() {
+  localStorage.setItem('cw_tx', JSON.stringify(transactions));
+  localStorage.setItem('cw_aj', JSON.stringify(ajustes));
+}
+
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('visible');
+  event.target.classList.add('active');
+  if (id === 'balance') renderBalance();
+  if (id === 'resultados') renderResultados();
+}
+
+function setToday() {
+  const today = new Date().toISOString().split('T')[0];
+  const f = document.getElementById('tx-fecha');
+  const fa = document.getElementById('aj-fecha');
+  if (f && !f.value) f.value = today;
+  if (fa && !fa.value) fa.value = today;
+}
+
+function addTransaction() {
+  const fecha = document.getElementById('tx-fecha').value;
+  const tipo = document.getElementById('tx-tipo').value;
+  const cuenta = document.getElementById('tx-cuenta').value.trim();
+  const desc = document.getElementById('tx-desc').value.trim();
+  const monto = parseFloat(document.getElementById('tx-monto').value);
+
+  if (!fecha || !cuenta || !desc || isNaN(monto) || monto <= 0) {
+    alert('Por favor completa todos los campos correctamente.');
+    return;
+  }
+
+  transactions.push({ id: Date.now(), fecha, tipo, cuenta, desc, monto });
+  save();
+  renderDiario();
+  document.getElementById('tx-cuenta').value = '';
+  document.getElementById('tx-desc').value = '';
+  document.getElementById('tx-monto').value = '';
+}
+
+function deleteTransaction(id) {
+  if (!confirm('¿Eliminar esta transacción?')) return;
+  transactions = transactions.filter(t => t.id !== id);
+  save();
+  renderDiario();
+}
+
+function renderDiario() {
+  const tbody = document.getElementById('diario-body');
+  if (transactions.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">No hay transacciones registradas.<br>Agrega tu primera entrada arriba.</div></td></tr>';
+    updateMetrics();
+    return;
+  }
+
+  const sorted = [...transactions].sort((a, b) => a.fecha.localeCompare(b.fecha));
+  tbody.innerHTML = sorted.map(t => `
+    <tr>
+      <td>${t.fecha}</td>
+      <td><span class="badge badge-${t.tipo}">${t.tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}</span></td>
+      <td>${t.cuenta}</td>
+      <td style="color:var(--text-secondary)">${t.desc}</td>
+      <td style="text-align:right" class="${t.tipo === 'ingreso' ? 'amount-positive' : 'amount-negative'}">${t.tipo === 'ingreso' ? '+' : '-'}${fmt(t.monto)}</td>
+      <td><button class="btn btn-danger" onclick="deleteTransaction(${t.id})">✕</button></td>
+    </tr>
+  `).join('');
+  updateMetrics();
+}
+
+function updateMetrics() {
+  const ingresos = transactions.filter(t => t.tipo === 'ingreso').reduce((s, t) => s + t.monto, 0);
+  const egresos = transactions.filter(t => t.tipo === 'egreso').reduce((s, t) => s + t.monto, 0);
+  const utilidad = ingresos - egresos;
+
+  document.getElementById('m-ingresos').textContent = fmt(ingresos);
+  document.getElementById('m-egresos').textContent = fmt(egresos);
+  document.getElementById('m-utilidad').textContent = fmt(utilidad);
+  document.getElementById('m-utilidad').className = 'metric-value ' + (utilidad >= 0 ? 'positive' : 'negative');
+  document.getElementById('m-count').textContent = transactions.length;
+}
+
+function addAjuste() {
+  const fecha = document.getElementById('aj-fecha').value;
+  const concepto = document.getElementById('aj-concepto').value;
+  const debito = document.getElementById('aj-debito').value.trim();
+  const credito = document.getElementById('aj-credito').value.trim();
+  const monto = parseFloat(document.getElementById('aj-monto').value);
+  const notas = document.getElementById('aj-notas').value.trim();
+
+  if (!fecha || !debito || !credito || isNaN(monto) || monto <= 0) {
+    alert('Por favor completa los campos obligatorios.');
+    return;
+  }
+
+  ajustes.push({ id: Date.now(), fecha, concepto, debito, credito, monto, notas });
+  save();
+  renderAjustes();
+  document.getElementById('aj-debito').value = '';
+  document.getElementById('aj-credito').value = '';
+  document.getElementById('aj-monto').value = '';
+  document.getElementById('aj-notas').value = '';
+}
+
+function deleteAjuste(id) {
+  if (!confirm('¿Eliminar este ajuste?')) return;
+  ajustes = ajustes.filter(a => a.id !== id);
+  save();
+  renderAjustes();
+}
+
+function renderAjustes() {
+  const tbody = document.getElementById('ajustes-body');
+  if (ajustes.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">No hay ajustes registrados.</div></td></tr>';
+    return;
+  }
+
+  const sorted = [...ajustes].sort((a, b) => a.fecha.localeCompare(b.fecha));
+  tbody.innerHTML = sorted.map(a => `
+    <tr>
+      <td>${a.fecha}</td>
+      <td><span class="badge badge-ajuste">${a.concepto}</span></td>
+      <td>${a.debito}</td>
+      <td>${a.credito}</td>
+      <td style="text-align:right;font-weight:500">${fmt(a.monto)}</td>
+      <td><button class="btn btn-danger" onclick="deleteAjuste(${a.id})">✕</button></td>
+    </tr>
+  `).join('');
+}
+
+function groupByCuenta(arr, tipo) {
+  const map = {};
+  arr.filter(t => t.tipo === tipo).forEach(t => {
+    const k = t.cuenta;
+    map[k] = (map[k] || 0) + t.monto;
+  });
+  return map;
+}
+
+function renderBalance() {
+  const ingresos = groupByCuenta(transactions, 'ingreso');
+  const egresos = groupByCuenta(transactions, 'egreso');
+
+  const totalIngresos = Object.values(ingresos).reduce((s, v) => s + v, 0);
+  const totalEgresos = Object.values(egresos).reduce((s, v) => s + v, 0);
+  const ajustesTotal = ajustes.reduce((s, a) => s + a.monto, 0);
+  const utilidad = totalIngresos - totalEgresos - ajustesTotal;
+
+  // Activos = cuentas de ingreso (caja, bancos, ventas que generan activo)
+  const activosList = document.getElementById('activos-list');
+  const pasivosList = document.getElementById('pasivos-list');
+  const patrimonioList = document.getElementById('patrimonio-list');
+
+  let activosHTML = '';
+  let totalActivos = 0;
+  Object.entries(ingresos).forEach(([cuenta, val]) => {
+    activosHTML += `<div class="cuenta-row"><span>${cuenta}</span><span>${fmt(val)}</span></div>`;
+    totalActivos += val;
+  });
+  activosList.innerHTML = activosHTML || '<div class="cuenta-row" style="color:var(--text-secondary);font-size:13px">Sin cuentas de activo.</div>';
+
+  let pasivosHTML = '';
+  let totalPasivos = 0;
+  Object.entries(egresos).forEach(([cuenta, val]) => {
+    pasivosHTML += `<div class="cuenta-row"><span>${cuenta}</span><span>${fmt(val)}</span></div>`;
+    totalPasivos += val;
+  });
+  pasivosList.innerHTML = pasivosHTML || '<div class="cuenta-row" style="color:var(--text-secondary);font-size:13px">Sin cuentas de pasivo.</div>';
+
+  let patrimonioHTML = `<div class="cuenta-row"><span>Utilidad del período</span><span class="${utilidad >= 0 ? 'amount-positive' : 'amount-negative'}">${fmt(utilidad)}</span></div>`;
+  if (ajustesTotal > 0) {
+    patrimonioHTML = `<div class="cuenta-row"><span>Resultado bruto</span><span>${fmt(totalIngresos - totalEgresos)}</span></div>
+    <div class="cuenta-row"><span>(-) Ajustes del período</span><span class="amount-negative">-${fmt(ajustesTotal)}</span></div>
+    <div class="cuenta-row"><span>Utilidad neta</span><span class="${utilidad >= 0 ? 'amount-positive' : 'amount-negative'}">${fmt(utilidad)}</span></div>`;
+  }
+  patrimonioList.innerHTML = patrimonioHTML;
+
+  const totalPatrimonio = utilidad;
+
+  document.getElementById('total-activos').textContent = fmt(totalActivos);
+  document.getElementById('total-pasivos').textContent = fmt(totalPasivos);
+  document.getElementById('total-patrimonio').textContent = fmt(totalPatrimonio);
+
+  const check = totalActivos === (totalPasivos + totalPatrimonio);
+  const statusEl = document.getElementById('balance-status');
+  statusEl.textContent = check ? '✓ Ecuación balanceada' : '⚠ No balanceado — revisa tus cuentas';
+  statusEl.style.color = check ? 'var(--teal-600)' : 'var(--red-600)';
+}
+
+function renderResultados() {
+  const tbody = document.getElementById('resultados-body');
+  const sorted = [...transactions].sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const ingresos = groupByCuenta(sorted, 'ingreso');
+  const egresos = groupByCuenta(sorted, 'egreso');
+
+  const totalIngresos = Object.values(ingresos).reduce((s, v) => s + v, 0);
+  const totalEgresos = Object.values(egresos).reduce((s, v) => s + v, 0);
+  const totalAjustes = ajustes.reduce((s, a) => s + a.monto, 0);
+  const utilidad = totalIngresos - totalEgresos - totalAjustes;
+
+  if (transactions.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="2"><div class="empty-state">Registra ingresos y egresos en el diario para generar el estado de resultados.</div></td></tr>';
+    return;
+  }
+
+  let html = '';
+
+  html += `<tr class="divider-row"><td colspan="2">Ingresos operacionales</td></tr>`;
+  Object.entries(ingresos).forEach(([cuenta, val]) => {
+    html += `<tr><td style="padding-left:24px">${cuenta}</td><td style="text-align:right" class="amount-positive">${fmt(val)}</td></tr>`;
+  });
+  html += `<tr class="subtotal-row"><td>Total ingresos</td><td style="text-align:right">${fmt(totalIngresos)}</td></tr>`;
+
+  html += `<tr><td colspan="2" style="padding:4px"></td></tr>`;
+  html += `<tr class="divider-row"><td colspan="2">Egresos operacionales</td></tr>`;
+  Object.entries(egresos).forEach(([cuenta, val]) => {
+    html += `<tr><td style="padding-left:24px">${cuenta}</td><td style="text-align:right" class="amount-negative">(${fmt(val)})</td></tr>`;
+  });
+  html += `<tr class="subtotal-row"><td>Total egresos</td><td style="text-align:right">(${fmt(totalEgresos)})</td></tr>`;
+
+  html += `<tr><td colspan="2" style="padding:4px"></td></tr>`;
+  html += `<tr class="subtotal-row"><td>Utilidad bruta</td><td style="text-align:right">${fmt(totalIngresos - totalEgresos)}</td></tr>`;
+
+  if (totalAjustes > 0) {
+    html += `<tr><td colspan="2" style="padding:4px"></td></tr>`;
+    html += `<tr class="divider-row"><td colspan="2">Ajustes del período</td></tr>`;
+    ajustes.forEach(a => {
+      html += `<tr><td style="padding-left:24px">${a.concepto} — ${a.debito}</td><td style="text-align:right" class="amount-negative">(${fmt(a.monto)})</td></tr>`;
+    });
+    html += `<tr class="subtotal-row"><td>Total ajustes</td><td style="text-align:right">(${fmt(totalAjustes)})</td></tr>`;
+  }
+
+  html += `<tr class="total-row">
+    <td>${utilidad >= 0 ? 'Utilidad neta del período' : 'Pérdida neta del período'}</td>
+    <td style="text-align:right;color:${utilidad >= 0 ? 'var(--teal-600)' : 'var(--red-600)'}">
+      ${utilidad >= 0 ? fmt(utilidad) : '(' + fmt(Math.abs(utilidad)) + ')'}
+    </td>
+  </tr>`;
+
+  tbody.innerHTML = html;
+}
+
+setToday();
+renderDiario();
+renderAjustes();
+</script>
+</body>
+</html>
